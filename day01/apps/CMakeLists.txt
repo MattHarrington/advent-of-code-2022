@@ -11,6 +11,7 @@ target_compile_features(app PRIVATE cxx_std_20)
 
 target_link_libraries(app PRIVATE libaoc fmt::fmt)
 
+# Increase warnings
 if (MSVC)
     target_compile_options(app PRIVATE /W4 /WX)
 else ()

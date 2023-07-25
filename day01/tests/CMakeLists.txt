@@ -14,6 +14,7 @@ add_executable(aoc-tests testlib.cpp)
 # Using C++17 in the test
 target_compile_features(aoc-tests PRIVATE cxx_std_17)
 
+# Increase warnings
 if (MSVC)
     target_compile_options(aoc-tests PRIVATE /W4 /WX)
 else ()
