@@ -1,0 +1,8 @@
+.idea/
+.vs/
+build/
+CMakeUserPresets.json
+cmake-build-debug/
+cmake-build-release/
+Folder.DotSettings.user
+out/
