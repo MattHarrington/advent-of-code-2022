@@ -1,109 +1,88 @@
 #include <fstream>
+#include <regex>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 
 #include "libaoc.hpp"
 
-std::vector<std::string> read_input(const std::string& filename)
+std::vector<Assignment> read_input(const std::string& filename)
 {
     std::fstream in{ filename };
     if (!in) throw std::runtime_error("File not found");
 
-    std::vector<std::string> rucksacks;
+    std::vector<Assignment> assignments;
 
     std::string line;
 
+    const std::regex r1{ R"(([\d]+)-([\d]+),([\d]+)-([\d]+))" };
+
     while (getline(in, line))
     {
-        rucksacks.push_back(line);
+        std::smatch sm;
+        std::regex_match(line, sm, r1);
+        const auto first_elf_assignment{ std::make_tuple(std::stoi(sm[1]), std::stoi(sm[2])) };
+        const auto second_elf_assignment{ std::make_tuple(std::stoi(sm[3]), std::stoi(sm[4])) };
+        const Assignment assignment{ first_elf_assignment, second_elf_assignment };
+        assignments.emplace_back(assignment);
     }
 
-    return rucksacks;
+    return assignments;
 }
 
-int part1(const std::vector<std::string>& rucksacks)
+int part1(const std::vector<Assignment>& assignments)
 {
-    int sum_of_priorities{ 0 };
+    int number_of_complete_overlaps{ 0 };
 
-    for (const auto& rucksack: rucksacks)
+    for (const auto& assignment: assignments)
     {
-        // Bisect string to get each compartment
-        auto first_compartment{ rucksack.substr(0, rucksack.size() / 2) };
-        auto second_compartment{ rucksack.substr(rucksack.size() / 2) };
-
-        // Look for unique item in each compartment
-        std::unordered_map<char, int> counts;
-        for (const auto& item: first_compartment)
+        if (std::get<0>(assignment.first_elf) >= std::get<0>(assignment.second_elf)
+            && std::get<1>(assignment.first_elf) <= std::get<1>(assignment.second_elf))
         {
-            counts[item] += 1;
+            // First elf's assignment is within region of second elf's assignment
+            ++number_of_complete_overlaps;
         }
-        for (const auto& item: second_compartment)
+        else if (std::get<0>(assignment.second_elf) >= std::get<0>(assignment.first_elf)
+                 && std::get<1>(assignment.second_elf) <= std::get<1>(assignment.first_elf))
         {
-            if (counts[item] != 0)
-            {
-                // Found duplicate
-                if (item >= 65 && item <= 90) // ASCII values for uppercase
-                {
-                    int priority{ item - 64 + 26 }; // Per problem statement, A-Z priorities are 27-52
-                    sum_of_priorities += priority;
-                }
-                else if (item >= 97 && item <= 122) // ASCII values for lowercase
-                {
-                    int priority{ item - 96 }; // Per problem statement, a-z priorities are 1-26
-                    sum_of_priorities += priority;
-                }
-                break;
-            }
+            // Second elf's assignment is within region of first elf's assignment
+            ++number_of_complete_overlaps;
         }
     }
 
-    return sum_of_priorities;
+    return number_of_complete_overlaps;
 }
 
-int part2(const std::vector<std::string>& rucksacks)
+int part2(const std::vector<Assignment>& assignments)
 {
-    int sum_of_priorities{ 0 };
+    int number_of_overlaps{ 0 };
 
-    for (auto it{ std::begin(rucksacks) }; it < std::end(rucksacks); it += 3)
+    for (const auto& assignment: assignments)
     {
-        auto rucksack1{ *it };
-        auto rucksack2{ *(it + 1) };
-        auto rucksack3{ *(it + 2) };
-
-        std::unordered_map<char, int> counts;
-        for (const auto& item: rucksack1)
+        if (std::get<0>(assignment.first_elf) >= std::get<0>(assignment.second_elf)
+            && std::get<0>(assignment.first_elf) <= std::get<1>(assignment.second_elf))
         {
-            if (counts[item] == 0) // Only count each item once
-            {
-                counts[item] += 1;
-            }
+            // First elf's starting region is with second elf's region
+            ++number_of_overlaps;
         }
-        for (const auto& item: rucksack2)
+        else if (std::get<0>(assignment.second_elf) >= std::get<0>(assignment.first_elf)
+                 && std::get<0>(assignment.second_elf) <= std::get<1>(assignment.first_elf))
         {
-            if (counts[item] == 1) // Item was also in rucksack1
-            {
-                counts[item] += 1;
-            }
+            // Second elf's starting region is within first elf's region
+            ++number_of_overlaps;
         }
-        for (const auto& item: rucksack3)
+        else if (std::get<1>(assignment.first_elf) >= std::get<0>(assignment.second_elf)
+                 && std::get<1>(assignment.first_elf) <= std::get<1>(assignment.second_elf))
         {
-            if (counts[item] == 2) // Item was also in rucksack1 and rucksack2
-            {
-                if (item >= 65 && item <= 90) // ASCII values for uppercase
-                {
-                    int priority{ item - 64 + 26 }; // Per problem statement, A-Z priorities are 27-52
-                    sum_of_priorities += priority;
-                }
-                else if (item >= 97 && item <= 122) // ASCII values for lowercase
-                {
-                    int priority{ item - 96 }; // Per problem statement, a-z priorities are 1-26
-                    sum_of_priorities += priority;
-                }
-                break;
-            }
+            // First elf's ending region is within second elf's region
+            ++number_of_overlaps;
+        }
+        else if (std::get<1>(assignment.second_elf) >= std::get<0>(assignment.first_elf)
+                 && std::get<1>(assignment.second_elf) <= std::get<1>(assignment.first_elf))
+        {
+            // Second elf's ending region is within first elf's region
+            ++number_of_overlaps;
         }
     }
 
-    return sum_of_priorities;
+    return number_of_overlaps;
 }
