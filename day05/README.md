@@ -1,5 +1,5 @@
 # Advent of Code 2022
 
-## Day 4
+## Day 5
 
-Solution to https://adventofcode.com/2022/day/4
+Solution to https://adventofcode.com/2022/day/5
